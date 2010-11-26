@@ -981,4 +981,17 @@
     return _.isFunction(object.url) ? object.url() : object.url;
   };
 
+  // Data linking of objects if jquery-datalink is present
+  if ($.fn.link) {
+    var _link = $.fn.link;
+    $.fn.link = function(target, settings) {
+      var self = this;
+      if (target instanceof Backbone.Model && typeof target.attributes === 'object') {
+        _link.call(self, target.attributes, settings);
+      } else {
+        _link.call(self, target, settings);
+      }
+    }
+  }
+
 })();
