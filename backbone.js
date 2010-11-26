@@ -987,7 +987,23 @@
     $.fn.link = function(target, settings) {
       var self = this;
       if (target instanceof Backbone.Model && typeof target.attributes === 'object') {
-        _link.call(self, target.attributes, settings);
+        var _settings = {};
+        for (attr in target.attributes) {
+          if (target.attributes.hasOwnProperty(attr) && attr !== '__events__') {
+            _settings[attr] = function(prop) {
+              return {
+                convert: function(value) {
+                  console.log('link:' + prop);
+                  var setter = {};
+                  setter[prop] = value;
+                  target.set(setter);
+                }
+              };
+            }(attr);
+          }
+        }
+        //TODO need to merge settings and _settings
+        _link.call(self, target.attributes, _settings);
       } else {
         _link.call(self, target, settings);
       }
