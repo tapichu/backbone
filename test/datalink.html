@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>DataLink Example</title>
+  <script src="vendor/jquery-1.4.4.js"></script>
+  <script src="vendor/jquery.datalink.js"></script>
+  <script src="vendor/underscore-1.1.0.js"></script>
+  <script src="../backbone.js"></script>
+</head>
+<body>
+  <form id="myForm">
+    <div>
+      First Name: <input type="text" name="firstName" />
+    </div>
+    <div>
+      Last Name: <input type="text" name="lastName" />
+    </div>
+  </form>
+  <br/>
+  BackboneModel.firstName: <span id="objFirst"></span><br/>
+  BackboneModel.lastName: <span id="objLast"></span><br/>
+
+  <script type="text/javascript">
+    $(document).ready(function() {
+
+      var Person = Backbone.Model.extend({});
+      window.person = new Person({
+        firstName: 'George',
+        lastName: 'Harrison'
+      });
+
+      // Link form
+      $('#myForm').link(person);
+
+      // Link spans
+      $('#objFirst').link(person, {
+        firstName: {
+          name: 'objFirst',
+          convertBack: function(value, source, target) {
+            $(target).text(value);
+          }
+        }
+      });
+      $('#objLast').link(person, {
+        lastName: {
+          name: 'objLast',
+          convertBack: function(value, source, target) {
+            $(target).text(value);
+          }
+        }
+      });
+
+      person.bind('change', function() {
+        console.log('Person changed');
+      });
+
+      person.set({'firstName': 'John'});
+      person.set({'lastName': 'Lennon'});
+
+    });
+  </script>
+</body>
+</html>
