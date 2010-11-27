@@ -983,28 +983,57 @@
 
   // Data linking of objects if jquery-datalink is present
   if ($.fn.link) {
+    // Function for creating converter functions
+    var converterFunction = function(prop) {
+      var that = this;
+      return function(value) {
+        var setter = {};
+        setter[prop] = value;
+        that.set(setter);
+      };
+    };
+    // jquery.datalink's two-way linking works with jQuery.data(), so we
+    // have to trigger a 'changeData' event for it to work transparently
+    // with Backbone.Model.set()
+    var bindToModelChange = function(prop) {
+      this.bind('change:' + prop, function() {
+        $(this.attributes).trigger('changeData', [prop, this.get(prop)]);
+      });
+    };
+
+    // Keep a reference to the original function
     var _link = $.fn.link;
+    // Redefine the link function to handle backbone models
     $.fn.link = function(target, settings) {
+      // The jQuery object
       var self = this;
-      if (target instanceof Backbone.Model && typeof target.attributes === 'object') {
-        var _settings = {};
-        for (attr in target.attributes) {
-          if (target.attributes.hasOwnProperty(attr) && attr !== '__events__') {
-            _settings[attr] = function(prop) {
-              return {
-                convert: function(value) {
-                  console.log('link:' + prop);
-                  var setter = {};
-                  setter[prop] = value;
-                  target.set(setter);
-                }
-              };
-            }(attr);
+
+      // If we're dealing with a backbone model
+      if (target instanceof Backbone.Model) {
+        converterFunction = _.bind(converterFunction, target);
+        bindToModelChange = _.bind(bindToModelChange, target);
+
+        var _settings = settings || {};
+        if (_.isEmpty(_settings)) {
+          // If no settings were passed, we should link all the object's properties
+          // TODO: it won't work if the target doesn't have attributes yet
+          for (attr in target.attributes) {
+            if (target.attributes.hasOwnProperty(attr) && attr !== '__events__') {
+              _settings[attr] = { convert: converterFunction(attr) };
+              bindToModelChange(attr);
+            }
+          }
+        } else {
+          // Link only the properties specified in settings
+          for (attr in _settings) {
+            _settings[attr].convert = converterFunction(attr);
+              bindToModelChange(attr);
           }
         }
-        //TODO need to merge settings and _settings
+        // Delegate to the original function
         _link.call(self, target.attributes, _settings);
       } else {
+        // If it's not a backbone model
         _link.call(self, target, settings);
       }
     }
