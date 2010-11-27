@@ -983,14 +983,16 @@
 
   // Data linking of objects if jquery-datalink is present
   if ($.fn.link) {
+
     // Function for creating converter functions
     var converterFunction = function(prop) {
-      var that = this;
-      return function(value) {
-        var setter = {};
-        setter[prop] = value;
-        that.set(setter);
-      };
+      return function(obj) {
+        return function(value) {
+          var setter = {};
+          setter[prop] = value;
+          obj.set(setter);
+        };
+      }(this);
     };
     // jquery.datalink's two-way linking works with jQuery.data(), so we
     // have to trigger a 'changeData' event for it to work transparently
@@ -1010,8 +1012,8 @@
 
       // If we're dealing with a backbone model
       if (target instanceof Backbone.Model) {
-        converterFunction = _.bind(converterFunction, target);
-        bindToModelChange = _.bind(bindToModelChange, target);
+        var createConverter = _.bind(converterFunction, target);
+        var bindToChange = _.bind(bindToModelChange, target);
 
         var _settings = settings || {};
         if (_.isEmpty(_settings)) {
@@ -1019,15 +1021,19 @@
           // TODO: it won't work if the target doesn't have attributes yet
           for (attr in target.attributes) {
             if (target.attributes.hasOwnProperty(attr) && attr !== '__events__') {
-              _settings[attr] = { convert: converterFunction(attr) };
-              bindToModelChange(attr);
+              _settings[attr] = { convert: createConverter(attr) };
+              bindToChange(attr);
             }
           }
         } else {
           // Link only the properties specified in settings
           for (attr in _settings) {
-            _settings[attr].convert = converterFunction(attr);
-              bindToModelChange(attr);
+            if (typeof _settings[attr] === 'string') {
+              var name = _settings[attr];
+              _settings[attr] = { name: name };
+            }
+            _settings[attr].convert = createConverter(attr);
+            bindToChange(attr);
           }
         }
         // Delegate to the original function

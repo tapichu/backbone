@@ -15,3 +15,5 @@ ol#qunit-tests .pass { color: green; }
 ol#qunit-tests .fail { color: red; } 
 
 p#qunit-testresult { margin-left: 1em; font-size: 10pt; font-family: 'trebuchet ms', verdana, arial; }
+
+#qunit-fixture { position: absolute; top: -10000px; left: -10000px; }
