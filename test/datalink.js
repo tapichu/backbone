@@ -168,6 +168,27 @@ $(document).ready(function() {
       cleanMarkup();
     });
 
+    test('Datalink: custom settings, model to view', function() {
+      equals($('#firstName').val(), '', "Input firstName should be empty");
+      equals($('#lastName').val(), '', "Input lastName should be empty");
+
+      var person = new Person(personData);
+      $('#myForm').link(person, {
+        lastName: {
+          name: 'firstName'
+        }
+      });
+
+      person.set({
+        lastName: 'Harrison'
+      });
+      equals($('#firstName').val(), 'Harrison', "Input firstName should match object's lastName");
+      equals($('#lastName').val(), '', "Input lastName should not change");
+
+      $('#myForm').unlink(person);
+      cleanMarkup();
+    });
+
     test('Datalink: custom mapping, view to model', function() {
       equals($('#firstName').val(), '', "Input firstName should be empty");
       equals($('#lastName').val(), '', "Input lastName should be empty");
@@ -193,5 +214,53 @@ $(document).ready(function() {
       $('#myForm').unlink(person);
       cleanMarkup();
     });
+
+    test('Datalink: custom mapping, model to view', function() {
+      equals($('#firstName').val(), '', "Input firstName should be empty");
+      equals($('#lastName').val(), '', "Input lastName should be empty");
+
+      var person = new Person(personData);
+      $('#myForm').link(person, {
+        lastName: 'firstName'
+      });
+
+      person.set({
+        lastName: 'Harrison'
+      });
+      equals($('#firstName').val(), 'Harrison', "Input firstName should match object's lastName");
+      equals($('#lastName').val(), '', "Input lastName should not change");
+
+      $('#myForm').unlink(person);
+      cleanMarkup();
+    });
+
+    test('Datalink: one-way', function() {
+      equals($('#firstName').val(), '', "Input firstName should be empty");
+      equals($('#lastName').val(), '', "Input lastName should be empty");
+
+      var person = new Person(personData);
+      $('#myForm').link(person, {
+        firstName: {
+            twoWay: false
+        }
+      });
+      var counter = {};
+      counter.firstName = counter.lastName = 0;
+      person.bind('change:firstName', function() { counter.firstName += 1; });
+
+      $('#firstName').val('George').trigger('change');
+      equals(person.get('firstName'), 'George', "Object's firstName should match firstName input");
+      equals(counter.firstName, 1, "Model should trigger a change:firstName");
+
+      person.set({
+        firstName: 'John'
+      });
+      equals($('#firstName').val(), 'George', "Input firstName should not change");
+
+      $('#myForm').unlink(person);
+      cleanMarkup();
+    });
+
+    // TODO: custom converters
 
 });

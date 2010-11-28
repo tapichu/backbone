@@ -1033,7 +1033,9 @@
               _settings[attr] = { name: name };
             }
             _settings[attr].convert = createConverter(attr);
-            bindToChange(attr);
+            if (_settings[attr].twoWay !== false) {
+                bindToChange(attr);
+            }
           }
         }
         // Delegate to the original function
