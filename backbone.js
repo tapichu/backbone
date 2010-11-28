@@ -1041,12 +1041,7 @@
               var name = _settings[attr];
               _settings[attr] = { name: name };
             }
-            // Settings already provides a converter
-            if (_settings[attr].convert !== 'undefined') {
-              _settings[attr].convert = createConverter(attr, _settings[attr].convert);
-            } else {
-              _settings[attr].convert = createConverter(attr);
-            }
+            _settings[attr].convert = createConverter(attr, _settings[attr].convert);
             // Is two-way linking enabled?
             if (_settings[attr].twoWay !== false) {
                 bindToChange(attr);
