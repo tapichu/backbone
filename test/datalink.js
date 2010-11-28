@@ -261,6 +261,106 @@ $(document).ready(function() {
       cleanMarkup();
     });
 
-    // TODO: custom converters
+    test('Datalink: custom converter', function() {
+      equals($('#firstName').val(), '', "Input firstName should be empty");
+      equals($('#lastName').val(), '', "Input lastName should be empty");
+
+      var person = new Person(personData);
+      $('#myForm').link(person, {
+        firstName: {
+            convert: function(value) {
+                return value.toUpperCase();
+            }
+        }
+      });
+      var counter = {};
+      counter.firstName = counter.lastName = 0;
+      person.bind('change:firstName', function() { counter.firstName += 1; });
+
+      $('#firstName').val('George').trigger('change');
+      equals(person.get('firstName'), 'GEORGE', "Object's firstName should be upper cased");
+      equals(counter.firstName, 1, "Model should trigger a change:firstName");
+
+      $('#myForm').unlink(person);
+      cleanMarkup();
+    });
+
+    test('Datalink: $.convertFn converter', function() {
+      equals($('#firstName').val(), '', "Input firstName should be empty");
+      equals($('#lastName').val(), '', "Input lastName should be empty");
+
+      $.convertFn.lowerCase = function(value) {
+        return value.toLowerCase();
+      };
+
+      var person = new Person(personData);
+      $('#myForm').link(person, {
+        firstName: {
+            convert: 'lowerCase'
+        }
+      });
+      var counter = {};
+      counter.firstName = counter.lastName = 0;
+      person.bind('change:firstName', function() { counter.firstName += 1; });
+
+      $('#firstName').val('George').trigger('change');
+      equals(person.get('firstName'), 'george', "Object's firstName should be lower cased");
+      equals(counter.firstName, 1, "Model should trigger a change:firstName");
+
+      $('#myForm').unlink(person);
+      cleanMarkup();
+    });
+
+    test('Datalink: custom linking behaviour with converter', function() {
+      equals($('#firstName').val(), '', "Input firstName should be empty");
+      equals($('#lastName').val(), '', "Input lastName should be empty");
+
+      var person = new Person(personData);
+      $('#myForm').link(person, {
+        firstName: {
+            convert: function(value, source, target) {
+              target.lastName = value;
+            }
+        }
+      });
+      var counter = {};
+      counter.firstName = counter.lastName = 0;
+      person.bind('change:firstName', function() { counter.firstName += 1; });
+
+      $('#firstName').val('George').trigger('change');
+      equals(person.get('firstName'), 'John', "Object's firstName should not change");
+      equals(counter.firstName, 0, "Model won't trigger a change:firstName");
+      equals(person.get('lastName'), 'George', "Object's lastName should match firstName input");
+
+      $('#myForm').unlink(person);
+      cleanMarkup();
+    });
+    
+    test('Datalink: custom linking behaviour with $.converFn converter', function() {
+      equals($('#firstName').val(), '', "Input firstName should be empty");
+      equals($('#lastName').val(), '', "Input lastName should be empty");
+
+      $.convertFn.customBehaviour = function(value, source, target) {
+        target.lastName = value;
+      };
+
+      var person = new Person(personData);
+      $('#myForm').link(person, {
+        firstName: {
+            convert: 'customBehaviour'
+        }
+      });
+      var counter = {};
+      counter.firstName = counter.lastName = 0;
+      person.bind('change:firstName', function() { counter.firstName += 1; });
+
+      $('#firstName').val('George').trigger('change');
+      equals(person.get('firstName'), 'John', "Object's firstName should not change");
+      equals(counter.firstName, 0, "Model won't trigger a change:firstName");
+      equals(person.get('lastName'), 'George', "Object's lastName should match firstName input");
+
+      $('#myForm').unlink(person);
+      cleanMarkup();
+    });
 
 });

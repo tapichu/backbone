@@ -985,12 +985,20 @@
   if ($.fn.link) {
 
     // Function for creating converter functions
-    var converterFunction = function(prop) {
+    var converterFunction = function(prop, converter) {
       return function(obj) {
-        return function(value) {
+        return function(value, source, target) {
           var setter = {};
-          setter[prop] = value;
-          obj.set(setter);
+          if (typeof converter === 'undefined') {
+            setter[prop] = value;
+          } else if (typeof converter === 'function') {
+            setter[prop] = converter(value, source, target);
+          } else if (typeof converter === 'string') {
+            setter[prop] = $.convertFn[converter].call({}, value, source, target);
+          }
+          if (typeof setter[prop] !== 'undefined') {
+            obj.set(setter);
+          }
         };
       }(this);
     };
@@ -1028,11 +1036,18 @@
         } else {
           // Link only the properties specified in settings
           for (attr in _settings) {
+            // Custom mappings like { firstName: 'first-name' }
             if (typeof _settings[attr] === 'string') {
               var name = _settings[attr];
               _settings[attr] = { name: name };
             }
-            _settings[attr].convert = createConverter(attr);
+            // Settings already provides a converter
+            if (_settings[attr].convert !== 'undefined') {
+              _settings[attr].convert = createConverter(attr, _settings[attr].convert);
+            } else {
+              _settings[attr].convert = createConverter(attr);
+            }
+            // Is two-way linking enabled?
             if (_settings[attr].twoWay !== false) {
                 bindToChange(attr);
             }
